@@ -18,12 +18,6 @@ import pygame
 
 from pyfingerprint.pyfingerprint import PyFingerprint
 
-URL_Main     = 'http://ec2-13-209-70-126.ap-northeast-2.compute.amazonaws.com/rasp/fingerPrint_rasp.php'
-URL_Numcheck = 'http://ec2-13-209-70-126.ap-northeast-2.compute.amazonaws.com/rasp/num_check.php'
-URL_Enroll   = 'http://ec2-13-209-70-126.ap-northeast-2.compute.amazonaws.com/rasp/rasp_register.php'
-URL_Delete   = 'http://ec2-13-209-70-126.ap-northeast-2.compute.amazonaws.com/rasp/delete_primaryKey.php'
-URL_Limit    = 'http://13.209.70.126/rasp/auto_create_absence.php'
-
 Main_ID ={
     "primaryKEY" : 'NULL',
     "tabNum" : 'NULL',
