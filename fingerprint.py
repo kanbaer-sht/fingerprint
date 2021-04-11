@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'untitled.ui'
-#
-# Created by: PyQt5 UI code generator 5.14.2
-#
-# WARNING! All changes made in this file will be lost!
-
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QMessageBox
@@ -48,13 +39,13 @@ Enroll_ID = {
 Delete_ID = {
     "primaryKEY" : 'null'
 }
+
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
 
 try:
     f = PyFingerprint('/dev/ttyAMA0', 57600, 0xFFFFFFFF, 0x00000000)
     ## BaudRate, ## address , ## password
-
 except Exception as e:
     print('센서 정보를 확인할 수 없습니다!')
     exit(1)
