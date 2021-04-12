@@ -3,12 +3,21 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QTime, QDateTime, Qt
 from threading import Timer
+from dotenv import load_dotenv
 import threading
 import time, json, requests
-import sys
+import sys, os
 import pygame
 
 #from pyfingerprint.pyfingerprint import PyFingerprint
+
+load_dotenv(verbose=True)
+
+URL_Main = os.getenv('URL_Main')
+URL_Numcheck = os.getenv('URL_Numcheck')
+URL_Enroll = os.getenv('URL_Enroll')
+URL_Delete = os.getenv('URL_Delete')
+URL_Limit = os.getenv('URL_Limit')
 
 Main_ID ={
     "primaryKEY" : 'NULL',
@@ -367,7 +376,7 @@ class Ui_Dialog(object):
 
         ## POST 통신을 이용하여 DB로 학번을 전송 후 존재 유무 수신
         response = requests.post(URL_Numcheck, data=Enroll_NAME)
-        
+
         ## 돌아오는 존재 유무 값을 받은후 json 형에서 다시 딕셔너리로 변환
         Enroll_FLAG = json.loads(response.text)
         #print(Enroll_FLAG)
