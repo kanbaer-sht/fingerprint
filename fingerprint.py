@@ -57,16 +57,18 @@ except Exception as e:
 class Ui_Dialog(object):
     first_flag = 0
     def setupUi(self, Dialog):
-
-        Dialog.setObjectName("Dialog")
+        # 지문인식기 메인 윈도우
+        Dialog.setObjectName("FingerPrint")
         Dialog.resize(800, 480)
 
+        # 메인 탭
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
         self.tabWidget.setGeometry(QtCore.QRect(-4, -1, 811, 481))
         self.tabWidget.setObjectName("tabWidget")
         self.Main = QtWidgets.QWidget()
         self.Main.setObjectName("Main")
 
+        # 메인 화면 시간 표시 텍스트
         self.label_time = QtWidgets.QLabel(self.Main)
         self.label_time.setGeometry(QtCore.QRect(70, 50, 651, 131))
         font = QtGui.QFont()
@@ -84,6 +86,7 @@ class Ui_Dialog(object):
         self.label_time.setAlignment(QtCore.Qt.AlignCenter)
         self.label_time.setObjectName("label_time")
 
+        # 메인 화면 안내메세지 텍스트
         self.label_text = QtWidgets.QLabel(self.Main)
         self.label_text.setGeometry(QtCore.QRect(70, 270, 651, 131))
         font = QtGui.QFont()
@@ -98,6 +101,7 @@ class Ui_Dialog(object):
         self.label_text.setAlignment(QtCore.Qt.AlignCenter)
         self.label_text.setObjectName("label_text")
 
+        # 메인 화면 입/퇴실 라디오 버튼 그룹
         self.groupBox = QtWidgets.QGroupBox(self.Main)
         self.groupBox.setGeometry(QtCore.QRect(70, 200, 600, 51))
         self.groupBox.setTitle("")
@@ -116,9 +120,13 @@ class Ui_Dialog(object):
         self.button_in.clicked.connect(self.change_state_in)
         self.button_out.clicked.connect(self.change_state_out)
         self.tabWidget.addTab(self.Main, "")
-
+        
+        # 지문 등록 탭
         self.Enroll = QtWidgets.QWidget()
         self.Enroll.setObjectName("Enroll")
+        self.tabWidget.addTab(self.Enroll, "")
+
+        # 지문 등록 넘버패드
         self.numpad0 = QtWidgets.QPushButton(self.Enroll)
         self.numpad0.setGeometry(QtCore.QRect(20, 190, 121, 111))
         self.numpad0.setObjectName("numpad0")
@@ -155,21 +163,18 @@ class Ui_Dialog(object):
         self.numpad6 = QtWidgets.QPushButton(self.Enroll)
         self.numpad6.setGeometry(QtCore.QRect(150, 320, 121, 111))
         self.numpad6.setObjectName("numpad6")
+        
+        # 지문 등록 안내메세지 박스
         self.label_enroll = QtWidgets.QLabel(self.Enroll)
         self.label_enroll.setGeometry(QtCore.QRect(20, 30, 771, 131))
-        font = QtGui.QFont()
-        font.setFamily("Arial Black")
-        font.setPointSize(16)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStrikeOut(False)
         self.label_enroll.setFont(font)
         self.label_enroll.setAutoFillBackground(True)
         self.label_enroll.setFrameShape(QtWidgets.QFrame.WinPanel)
         self.label_enroll.setScaledContents(False)
         self.label_enroll.setAlignment(QtCore.Qt.AlignCenter)
         self.label_enroll.setObjectName("label_enroll")
-        self.tabWidget.addTab(self.Enroll, "")
+        
+        # 넘버패드 클릭 시, 실행 될 함수 연결
         self.numpad0.clicked.connect(self.num_input0)
         self.numpad1.clicked.connect(self.num_input1)
         self.numpad2.clicked.connect(self.num_input2)
@@ -181,18 +186,14 @@ class Ui_Dialog(object):
         self.numpad8.clicked.connect(self.num_input8)
         self.numpad9.clicked.connect(self.num_input9)
         self.numpad_back.clicked.connect(self.num_back)
-        self.numpad_enter.clicked.connect(self.enroll_start)
+        self.numpad_enter.clicked.connect(self.enroll_send)
 
-
-        font = QtGui.QFont()
-        font.setFamily("Arial Black")
-        font.setPointSize(48)
-        font.setBold(True)
-        font.setWeight(75)
+        # 지문 삭제 탭
         self.Delete = QtWidgets.QWidget()
         self.Delete.setObjectName("Delete")
         self.tabWidget.addTab(self.Delete, "")
         
+        # 지문 삭제 안내메세지 텍스트
         self.label_delete = QtWidgets.QLabel(self.Delete)
         self.label_delete.setGeometry(QtCore.QRect(70, 130, 651, 131))
         font = QtGui.QFont()
@@ -207,15 +208,13 @@ class Ui_Dialog(object):
         self.label_delete.setAlignment(QtCore.Qt.AlignCenter)
         self.label_delete.setObjectName("label_text")
 
-        font = QtGui.QFont()
-        font.setFamily("Arial Black")
-        font.setPointSize(48)
-        font.setBold(True)
-        font.setWeight(75)
+        # 외출 탭
+        
         self.Outgo = QtWidgets.QWidget()
         self.Outgo.setObjectName("Out")
         self.tabWidget.addTab(self.Outgo, "")
 
+        # 외출 탭 시간 표시 텍스트
         self.Out_time = QtWidgets.QLabel(self.Outgo)
         self.Out_time.setGeometry(QtCore.QRect(70, 50, 651, 131))
         font = QtGui.QFont()
@@ -230,6 +229,21 @@ class Ui_Dialog(object):
         self.Out_time.setScaledContents(False)
         self.Out_time.setAlignment(QtCore.Qt.AlignCenter)
         self.Out_time.setObjectName("Out_time")
+
+        # 외출 탭 안내메세지 텍스트
+        self.out_text = QtWidgets.QLabel(self.Outgo)
+        self.out_text.setGeometry(QtCore.QRect(70, 270, 651, 131))
+        font = QtGui.QFont()
+        font.setFamily("Arial Black")
+        font.setPointSize(24)
+        font.setBold(True)
+        font.setWeight(75)
+        self.out_text.setFont(font)
+        self.out_text.setAutoFillBackground(True)
+        self.out_text.setFrameShape(QtWidgets.QFrame.WinPanel)
+        self.out_text.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.out_text.setAlignment(QtCore.Qt.AlignCenter)
+        self.out_text.setObjectName("out_text")
 
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
@@ -309,60 +323,51 @@ class Ui_Dialog(object):
     def change_state_out(self):
         Main_ID["tab"] = "false"
     
+    # 입력한 넘버패드 버튼에 따라 서버에 전송할 학번 값 수정
     def num_input0(self):
         Enroll_NAME["std_num"] += "0"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input1(self):
         Enroll_NAME["std_num"] += "1"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input2(self):
         Enroll_NAME["std_num"] += "2"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input3(self):
         Enroll_NAME["std_num"] += "3"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input4(self):
         Enroll_NAME["std_num"] += "4"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input5(self):
         Enroll_NAME["std_num"] += "5"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input6(self):
         Enroll_NAME["std_num"] += "6"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input7(self):
         Enroll_NAME["std_num"] += "7"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input8(self):
         Enroll_NAME["std_num"] += "8"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_input9(self):
         Enroll_NAME["std_num"] += "9"
         self.label_enroll.setText(Enroll_NAME["std_num"])
-        print(Enroll_NAME["std_num"])
     def num_back(self):
         Enroll_NAME["std_num"] = ""
         self.label_enroll.setText("학번을 입력해주세요")
-        print(Enroll_NAME["std_num"])
     
 
-    def enroll_start(self):
+    # 지문등록 확인 버튼 클릭 시, 실행할 함수
+    def enroll_send(self):
         #Enroll_NAME["std_num"] = self.lineEdit.text()
         #self.lineEdit.clear()
-        print(Enroll_NAME["std_num"])
-        
+        print(Enroll_NAME)
+
         ## POST 통신을 이용하여 DB로 학번을 전송 후 존재 유무 수신
         response = requests.post(URL_Numcheck, data=Enroll_NAME)
-       # print(Enroll_NAME)
+        
         ## 돌아오는 존재 유무 값을 받은후 json 형에서 다시 딕셔너리로 변환
         Enroll_FLAG = json.loads(response.text)
         #print(Enroll_FLAG)
