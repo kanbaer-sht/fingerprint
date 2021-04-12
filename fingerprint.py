@@ -1,13 +1,14 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QTime, QDateTime, Qt
 from threading import Timer
 import threading
 import time, json, requests
 import sys
 import pygame
 
-from pyfingerprint.pyfingerprint import PyFingerprint
+#from pyfingerprint.pyfingerprint import PyFingerprint
 
 Main_ID ={
     "primaryKEY" : 'NULL',
@@ -39,17 +40,19 @@ Enroll_ID = {
 Delete_ID = {
     "primaryKEY" : 'null'
 }
-
+"""
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
 
+
+# 지문인식기 연결
 try:
     f = PyFingerprint('/dev/ttyAMA0', 57600, 0xFFFFFFFF, 0x00000000)
     ## BaudRate, ## address , ## password
 except Exception as e:
     print('센서 정보를 확인할 수 없습니다!')
     exit(1)
-
+"""
 
 class Ui_Dialog(object):
     first_flag = 0
@@ -73,6 +76,8 @@ class Ui_Dialog(object):
         font.setWeight(75)
         font.setStrikeOut(False)
         self.label_time.setFont(font)
+        self.label_time.setStyleSheet("border-color : #FFF106; border-style: \
+        outset; border-width: 2px;")
         self.label_time.setAutoFillBackground(True)
         self.label_time.setFrameShape(QtWidgets.QFrame.WinPanel)
         self.label_time.setScaledContents(False)
@@ -202,6 +207,30 @@ class Ui_Dialog(object):
         self.label_delete.setAlignment(QtCore.Qt.AlignCenter)
         self.label_delete.setObjectName("label_text")
 
+        font = QtGui.QFont()
+        font.setFamily("Arial Black")
+        font.setPointSize(48)
+        font.setBold(True)
+        font.setWeight(75)
+        self.Outgo = QtWidgets.QWidget()
+        self.Outgo.setObjectName("Out")
+        self.tabWidget.addTab(self.Outgo, "")
+
+        self.Out_time = QtWidgets.QLabel(self.Outgo)
+        self.Out_time.setGeometry(QtCore.QRect(70, 50, 651, 131))
+        font = QtGui.QFont()
+        font.setFamily("Arial Black")
+        font.setPointSize(40)
+        font.setBold(True)
+        font.setWeight(75)
+        font.setStrikeOut(False)
+        self.Out_time.setFont(font)
+        self.Out_time.setAutoFillBackground(True)
+        self.Out_time.setFrameShape(QtWidgets.QFrame.WinPanel)
+        self.Out_time.setScaledContents(False)
+        self.Out_time.setAlignment(QtCore.Qt.AlignCenter)
+        self.Out_time.setObjectName("Out_time")
+
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -231,48 +260,38 @@ class Ui_Dialog(object):
         self.numpad_enter.setText(_translate("Dialog", "확인"))
         self.numpad7.setText(_translate("Dialog", "7"))
         self.numpad6.setText(_translate("Dialog", "6"))
-
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Enroll), _translate("Dialog", "등록"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Delete), _translate("Dialog", "삭제"))
+        
         self.label_delete.setText(_translate("Dialog", "삭제"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Delete), _translate("Dialog", "삭제"))
+
+        self.Out_time.setText(_translate("Dialog", "시간"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Outgo), _translate("Dialog", "외출"))
         
         self.showtime()
-        self.MainMessage()
+        #self.MainMessage()
 
 
     def showtime(self):
-        # 1970년 1월 1일 0시 0분 0초 부터 현재까지 경과시간 (초단위)
-        t = time.time()
-        # 한국 시간 얻기
-        kor = time.localtime(t)
-        # LCD 표시
-        clock = str(kor.tm_year) + "-"
-        clock += str(kor.tm_mon) + "-"
-        clock += str(kor.tm_mday) + "   "
-        clock += str(kor.tm_hour) + ":"
-        clock += str(kor.tm_min) + ":"
-        clock += str(kor.tm_sec)
+        # 현재 시간을 구한 뒤, Label에 출력하기 위해서 str형으로 변환
+        # 현재 날짜 및 시간
+        current_date = QDateTime.currentDateTime()
+        current_date = current_date.toString('yyyy-MM-dd\thh:mm:ss')
+        # 하교시간 알람등에 사용할 시간만 따로 구하기
+        current_time = QTime.currentTime()
+        current_time = current_time.toString()
 
-        limit_time = str(kor.tm_hour)
-        limit_time += str(kor.tm_min)
-        limit_time += str(kor.tm_sec)
-        
-        alarm_time = str(kor.tm_hour)
-        alarm_time += str(kor.tm_min)
-        alarm_time += str(kor.tm_sec)
-        #print(limit_time)
-        
-        if(alarm_time == "235010" or alarm_time == "235510"):
+        # 하교시간 알람
+        if(current_time == "23:50:10" or current_time == "23:55:10"):
             pygame.mixer.music.play()
-        
-        if(limit_time == "235810"):
+        # 하교시간 리미트
+        if(current_time == "23:58:10"):
             response = requests.post(URL_Limit)
             print(response.status_code)
 
-        self.label_time.setText(clock)
-
-        #print(self.tabWidget.currentIndex())
-
+        self.label_time.setText(current_date)
+        self.Out_time.setText(current_date)
+        
         if (self.tabWidget.currentIndex() == 0):
             Main_ID["tabNum"] = "출석"
         elif(self.tabWidget.currentIndex() == 1):
@@ -284,12 +303,11 @@ class Ui_Dialog(object):
         timer = Timer(1, self.showtime)
         timer.start()
         
+    # 입실/퇴실 버튼 선택 시, 현재 상태 값 변경
     def change_state_in(self):
         Main_ID["tab"] = "true"
-        print(Main_ID["tab"])
     def change_state_out(self):
         Main_ID["tab"] = "false"
-        print(Main_ID["tab"])
     
     def num_input0(self):
         Enroll_NAME["std_num"] += "0"
@@ -358,7 +376,7 @@ class Ui_Dialog(object):
         
     def setMessage(self,string):
         self.label_text.setText(string)
-        
+'''    
     def MainMessage(self):
         if self.first_flag == 0:   
             while (f.readImage() == False):
@@ -383,7 +401,7 @@ class Ui_Dialog(object):
                         Main_ID["primaryKEY"] = str(positionNumber)
                         response = requests.post(URL_Main, data=Main_ID)
                         Main_CHECK = json.loads(response.text)
-                       # print(Main_CHECK)
+                        # print(Main_CHECK)
                         #print(Main_ID)
                         
                         # check_in, check_out -> set
@@ -393,7 +411,7 @@ class Ui_Dialog(object):
                             if((self.button_in.isChecked() == True) and (Main_CHECK['check'] == False)):
                                 prt = Main_CHECK["userName"] + "님 입실처리 되었습니다"
                                 self.label_text.setText(prt)
-                               # print(Main_CHECK)
+                                # print(Main_CHECK)
 
                             # Radiobutton이 입실로 체크, 입실 내역이 존재하는 상황
                             elif((self.button_in.isChecked() == True) and (Main_CHECK['check'] == True)):
@@ -493,7 +511,7 @@ class Ui_Dialog(object):
             else:
                 ## 읽은 이미지를 문자열로 전환
                 f.convertImage(0x01)
-                         
+
                 ## 등록된 지문인지 확인 후 지문넘버 저장
                 result = f.searchTemplate()
                 positionNumber = result[0]
@@ -522,7 +540,7 @@ class Ui_Dialog(object):
 
 #t = threading.Timer(1, Ui_Dialog.sensor)
 #t.start()
-
+'''
 
 if __name__ == "__main__":
     import sys
@@ -530,7 +548,7 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
-    Dialog.showFullScreen()
+    Dialog.show()
     sys.exit(app.exec_())
 
 
