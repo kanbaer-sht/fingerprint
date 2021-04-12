@@ -11,6 +11,7 @@ import pygame
 
 #from pyfingerprint.pyfingerprint import PyFingerprint
 
+# dotenv를 사용해 url주소 가져오기
 load_dotenv(verbose=True)
 
 URL_Main = os.getenv('URL_Main')
@@ -218,7 +219,6 @@ class Ui_Dialog(object):
         self.label_delete.setObjectName("label_text")
 
         # 외출 탭
-        
         self.Outgo = QtWidgets.QWidget()
         self.Outgo.setObjectName("Out")
         self.tabWidget.addTab(self.Outgo, "")
@@ -262,7 +262,7 @@ class Ui_Dialog(object):
 
         _translate = QtCore.QCoreApplication.translate
 
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "FingerPrint"))
         self.label_time.setText(_translate("Dialog", "시간"))
         self.label_text.setText(_translate("Dialog", "지문을 찍어주세요"))
         self.button_in.setText(_translate("Dialog", "출석"))
