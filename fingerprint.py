@@ -255,37 +255,41 @@ class Ui_Dialog(object):
 
         # 스타일시트
         # 메인페이지
-        self.label_time.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:9px solid #FFFFFF")
+        self.label_time.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:2px solid #414c5d")
         self.label_text.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:9px solid #FFFFFF")
+        border:2px solid #414c5d")
 
         # 지문 등록
-        self.label_enroll.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:3px solid #414c5d")
-        self.numpad0.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
+        self.label_enroll.setStyleSheet("color:#414c5d; background-color:#ffffff;\
         border:2px solid #414c5d")
-        self.numpad1.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad2.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad3.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad4.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad5.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad6.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad7.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad8.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad9.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad_back.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
-        border:2px solid #414c5d")
-        self.numpad_enter.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
+        self.numpad0.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad1.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad2.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad3.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad4.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad5.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad6.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad7.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad8.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad9.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad_back.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+        self.numpad_enter.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:1px solid #414c5d")
+
+        # 지문 삭제
+        self.label_delete.setStyleSheet("color:#414c5d; background-color:#ffffff;\
         border:2px solid #414c5d")
 
         self.retranslateUi(Dialog)
