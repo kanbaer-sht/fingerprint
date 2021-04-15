@@ -254,6 +254,7 @@ class Ui_Dialog(object):
         self.out_text.setObjectName("out_text")
 
         # 스타일시트
+
         # 메인페이지
         self.label_time.setStyleSheet("color:#414c5d; background-color:#ffffff;\
         border:2px solid #414c5d")
@@ -426,14 +427,18 @@ class Ui_Dialog(object):
         self.label_text.setText(string)
 
     def mainMessage(self):
-        '''
+        
         while f.readImage() == False:
             pass
-        
+        f.convertImage(0x01)
+        finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+
         if self.tabWidget.currentIndex() == 0:
-            
+
+            self.label_enroll.setText("학번을 입력해주세요")
+            self.label_delete.setText("삭제")
+
             ## 읽은 이미지를 문자열로 변환
-            f.convertImage(0x01)
             result = f.searchTemplate()
             positionNumber = result[0]
             score = result[1]
@@ -474,7 +479,7 @@ class Ui_Dialog(object):
         elif self.tabWidget.currentIndex() == 1:
             
             ## 읽은 이미지를 문자열로 변환
-            f.convertImage(0x01)
+            #f.convertImage(0x01)
 
             result = f.searchTemplate()
 
@@ -501,12 +506,12 @@ class Ui_Dialog(object):
             ## 등록된 지문이 아니고, 정확도가 높은 경우
             else:
                 ## 지문틀 생성
-                f.createTemplate()
+                #f.createTemplate()
 
                 ## 지문을 저장하고 번호 부여
-                positionNumber = f.storeTemplate()
+                #positionNumber = f.storeTemplate()
                 
-                Enroll_ID["primaryKEY"] = positionNumber
+                Enroll_ID["primaryKEY"] = finger
                 Enroll_ID["userID"] = Enroll_NAME["std_num"]
                 Enroll_NAME["std_num"] = ""
 
@@ -538,7 +543,7 @@ class Ui_Dialog(object):
                 
         timer = Timer(1, self.sensor)
         timer.start()
-'''
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
