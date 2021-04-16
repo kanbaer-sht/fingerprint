@@ -22,8 +22,7 @@ URL_FINGER = os.getenv('URL_FINGER')
 URL_LIMIT = os.getenv('URL_LIMIT')
 
 Main_ID ={
-    "std_num" : 'NULL',
-    "tabNum" : 'NULL',
+    "primaryKEY" : 'NULL',
     "tab" : 'true'
 }
 
@@ -34,11 +33,11 @@ Main_CHECK = {
 }
 
 Enroll_NAME = {
-    "std_num" : '51',
-    "tabNum" : '등록'       # 현재 탭 넘버링
+    "std_num" : ''
 }
 
 Enroll_FLAG = {
+    "enroll_flag" : 'false',
     "flag_exist": 'false',  # 입력한 학번 존재 유무 확인 값
     "userName": 'NULL'
 }
@@ -49,11 +48,9 @@ Enroll_ID = {
 }
 
 Delete_ID = {
-    "primaryKEY" : 'NULL',
-    "tabNum" : 'NULL'
+    "primaryKEY" : 'NULL'
 }
-
-"""
+'''
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
 
@@ -65,23 +62,62 @@ try:
 except Exception as e:
     print('센서 정보를 확인할 수 없습니다!')
     exit(1)
-"""
-
-def req_to_server(URL, req_data=None):
-    if req_data == None:
-        return requests.post(URL)
-    else:
-        return requests.post(URL, data=req_data)
-
-response = req_to_server(URL_FINGER)
-FINGER_DATA = json.loads(response.text)
-
-for i in range(0, len(FINGER_DATA)):
-    print(type(FINGER_DATA[i]['std_num']))
-
 '''
+def reset_all_dic():
+    global Main_ID, Main_CHECK, Enroll_NAME, Enroll_FLAG, Enroll_ID, Delete_ID
+    Main_ID ={
+        "primaryKEY" : 'NULL',
+        "tab" : 'true'
+    }
+
+    Main_CHECK = {
+        "userName" : 'NULL',
+        "data" : 'true',
+        "check" : 'NULL'
+    }
+
+    Enroll_NAME = {
+        "std_num" : ''
+    }
+
+    Enroll_FLAG = {
+        "enroll_flag": 'false',
+        "flag_exist": 'false',  # 입력한 학번 존재 유무 확인 값
+        "userName": 'NULL'
+    }
+
+    Enroll_ID = {
+        "userID": 'NULL',       # 사용자 이름
+        "primaryKEY": 'NULL',   # 사용자 지문 번호
+    }
+
+    Delete_ID = {
+        "primaryKEY" : 'NULL'
+    }
+
+def search_finger_data(data, mode='finger'):
+    if mode == 'finger':
+        for i in range(0, len(data)):
+            f.uploadCharacteristics(0x02,eval(data[i]['serial_num']))
+            score = f.compareCharacteristics()
+            if score != 0:
+                Main_ID['primaryKEY'] = data[i]['std_num']
+                return score
+    else:
+        for i in range(0, len(data)):
+            f.uploadCharacteristics(0x02,eval(data[i]['serial_num']))
+            score = f.compareCharacteristics()
+            if score != 0:
+                Delete_ID['primaryKEY'] = data[i]['std_num']
+                return True
+    return 0
+
 class Ui_Dialog(object):
-    first_flag = 0
+    
+    def __init__(self):
+        super().__init__()
+        self.score = 0
+        self.enroll_flag = False
     def setupUi(self, Dialog):
         # 지문인식기 메인 윈도우
         Dialog.setObjectName("FingerPrint")
@@ -238,38 +274,62 @@ class Ui_Dialog(object):
         self.tabWidget.addTab(self.Outgo, "")
 
         # 외출 탭 시간 표시 텍스트
-        self.Out_time = QtWidgets.QLabel(self.Outgo)
-        self.Out_time.setGeometry(QtCore.QRect(70, 50, 651, 131))
+        self.out_time = QtWidgets.QLabel(self.Outgo)
+        self.out_time.setGeometry(QtCore.QRect(70, 50, 651, 131))
         font = QtGui.QFont()
         font.setFamily("Arial Black")
         font.setPointSize(40)
         font.setBold(True)
         font.setWeight(75)
         font.setStrikeOut(False)
-        self.Out_time.setFont(font)
-        self.Out_time.setAutoFillBackground(True)
-        self.Out_time.setFrameShape(QtWidgets.QFrame.WinPanel)
-        self.Out_time.setScaledContents(False)
-        self.Out_time.setAlignment(QtCore.Qt.AlignCenter)
-        self.Out_time.setObjectName("Out_time")
+        self.out_time.setFont(font)
+        self.out_time.setAutoFillBackground(True)
+        self.out_time.setFrameShape(QtWidgets.QFrame.WinPanel)
+        self.out_time.setScaledContents(False)
+        self.out_time.setAlignment(QtCore.Qt.AlignCenter)
+        self.out_time.setObjectName("out_time")
 
         # 외출 탭 안내메세지 텍스트
-        self.out_text = QtWidgets.QLabel(self.Outgo)
-        self.out_text.setGeometry(QtCore.QRect(70, 270, 651, 131))
+        self.label_out = QtWidgets.QLabel(self.Outgo)
+        self.label_out.setGeometry(QtCore.QRect(70, 270, 651, 131))
         font = QtGui.QFont()
         font.setFamily("Arial Black")
         font.setPointSize(24)
         font.setBold(True)
         font.setWeight(75)
-        self.out_text.setFont(font)
-        self.out_text.setAutoFillBackground(True)
-        self.out_text.setFrameShape(QtWidgets.QFrame.WinPanel)
-        self.out_text.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.out_text.setAlignment(QtCore.Qt.AlignCenter)
-        self.out_text.setObjectName("out_text")
+        self.label_out.setFont(font)
+        self.label_out.setAutoFillBackground(True)
+        self.label_out.setFrameShape(QtWidgets.QFrame.WinPanel)
+        self.label_out.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.label_out.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_out.setObjectName("label_out")
+
+        # 외출 사유 버튼
+        self.out_groupBox = QtWidgets.QGroupBox(self.Outgo)
+        self.out_groupBox.setGeometry(QtCore.QRect(70, 200, 600, 51))
+        self.out_groupBox.setTitle("")
+        self.out_groupBox.setObjectName("out_groupBox")
+        self.button_meal = QtWidgets.QRadioButton(self.out_groupBox)
+        self.button_meal.setGeometry(QtCore.QRect(10, 10, 181, 41))
+        self.button_meal.setObjectName("button_meal")
+        self.button_mensetsu = QtWidgets.QRadioButton(self.out_groupBox)
+        self.button_mensetsu.setGeometry(QtCore.QRect(180, 10, 181, 41))
+        self.button_mensetsu.setObjectName("button_mensetsu")
+        self.button_gz = QtWidgets.QRadioButton(self.out_groupBox)
+        self.button_gz.setGeometry(QtCore.QRect(350, 10, 181, 41))
+        self.button_gz.setObjectName("button_gz")
+        font = QtGui.QFont()
+        font.setFamily("Arial Black")
+        font.setPointSize(20)
+        self.button_meal.setFont(font)
+        self.button_mensetsu.setFont(font)
+        self.button_gz.setFont(font)
+        self.button_meal.clicked.connect(self.change_state_in)
+        self.button_mensetsu.clicked.connect(self.change_state_in)
+        self.button_gz.clicked.connect(self.change_state_out)
+        self.tabWidget.addTab(self.Outgo, "")
 
         # 스타일시트
-
         # 메인페이지
         self.label_time.setStyleSheet("color:#414c5d; background-color:#ffffff;\
         border:2px solid #414c5d")
@@ -308,6 +368,12 @@ class Ui_Dialog(object):
         self.label_delete.setStyleSheet("color:#414c5d; background-color:#ffffff;\
         border:2px solid #414c5d")
 
+        # 외출
+        self.out_time.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:2px solid #414c5d")
+        self.label_out.setStyleSheet("color:#414c5d; background-color:#ffffff;\
+        border:2px solid #414c5d")
+
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -339,12 +405,16 @@ class Ui_Dialog(object):
         self.numpad_enter.setText(_translate("Dialog", "확인"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Enroll), _translate("Dialog", "등록"))
         
-        self.label_delete.setText(_translate("Dialog", "삭제"))
+        self.label_delete.setText(_translate("Dialog", "삭제할 지문을 찍어주세요"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Delete), _translate("Dialog", "삭제"))
 
-        self.Out_time.setText(_translate("Dialog", "시간"))
+        self.label_out.setText(_translate("Dialog", "사유 선택 후, 지문을 찍어주세요"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.Outgo), _translate("Dialog", "외출"))
-        
+        self.button_meal.setText(_translate("Dialog", "식사"))
+        self.button_meal.setChecked(True)
+        self.button_mensetsu.setText(_translate("Dialog", "면접연습"))
+        self.button_gz.setText(_translate("Dialog", "글로벌존"))
+
         self.showtime()
         #self.mainMessage()
 
@@ -367,15 +437,13 @@ class Ui_Dialog(object):
             print(response.status_code)
 
         self.label_time.setText(current_date)
-        self.Out_time.setText(current_date)
+        self.out_time.setText(current_date)
         
-        if (self.tabWidget.currentIndex() == 0):
-            Main_ID["tabNum"] = "출석"
-        elif(self.tabWidget.currentIndex() == 1):
-            Enroll_NAME["tabNum"] = "등록"
-        elif(self.tabWidget.currentIndex() == 2):
-            Delete_ID["tabNum"] = "삭제"
-
+        if self.button_in.isChecked():
+            Main_ID['tab'] = 'true'
+        else:
+            Main_ID['tab'] = 'false'
+        
         # 타이머 설정  (1초마다, 콜백함수)
         timer = Timer(1, self.showtime)
         timer.start()
@@ -424,148 +492,146 @@ class Ui_Dialog(object):
 
     # 지문등록 확인 버튼 클릭 시, 실행할 함수
     def enroll_send(self):
-        print(Enroll_NAME)
 
         ## POST 통신을 이용하여 DB로 학번을 전송 후 존재 유무 수신
-        response = requests.post(URL_Numcheck, data=Enroll_NAME)
+        response = requests.post(URL_NUMCHECK, data=Enroll_NAME)
 
         ## 돌아오는 존재 유무 값을 받은후 json 형에서 다시 딕셔너리로 변환
         Enroll_FLAG = json.loads(response.text)
 
         if(Enroll_FLAG["flag_exist"] == "true"):
+            self.enroll_flag = True
             prt = Enroll_FLAG["userName"] + "님 지문 등록을 진행합니다\n센서에 손가락을 올려주세요"
             self.label_enroll.setText(prt)
         else:
             self.label_enroll.setText("등록정보가 확인되지 않습니다")
-        
-    def setMessage(self, string):
-        self.label_text.setText(string)
-
+        '''
     def mainMessage(self):
-        
+        reset_all_dic()
+        self.score = 0
         while f.readImage() == False:
             pass
-
-        f.convertImage(0x01)
-        finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-
-        response = req_to_server(URL_FINGER)
-        FINGER_DATA = response.text
-        print(FINGER_DATA)
-        for i in enumerate(response.text):
-            print(i)
-
+        
+        ## 메인 출석화면
         if self.tabWidget.currentIndex() == 0:
-
             self.label_enroll.setText("학번을 입력해주세요")
-            self.label_delete.setText("삭제")
+            self.label_delete.setText("삭제할 지문을 찍어주세요")
 
-            ## 읽은 이미지를 문자열로 변환
-            result = f.searchTemplate()
-            positionNumber = result[0]
-            score = result[1]
+            f.convertImage(0x01)
+            finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
             
+            response = requests.post(URL_FINGER)
+            FINGER_DATA = json.loads(response.text)
+
+            self.score = search_finger_data(FINGER_DATA)
+
             ## 지문 검사
-            if positionNumber == -1: 
+            if self.score == 0: 
                 self.label_text.setText("등록되지 않은 지문입니다")
                 time.sleep(1)
             else:
-                if score >= 45:
-                    Main_ID["primaryKEY"] = str(positionNumber)
-                    response = requests.post(URL_Main, data=Main_ID)
+                if self.score >= 45:
+                    response = requests.post(URL_MAIN, data=Main_ID)
                     Main_CHECK = json.loads(response.text)
-
-                    # check_in, check_out -> set
-                    if Main_CHECK['data'] == True:
-                        # Radiobutton이 입실로 체크, 입실내역이 존재하지 않는 상황
-                        if self.button_in.isChecked() == True and Main_CHECK['check'] == False:
-                            prt = Main_CHECK["userName"] + "님 입실처리 되었습니다"
-                            self.label_text.setText(prt)
-                        # Radiobutton이 입실로 체크, 입실 내역이 존재하는 상황
-                        elif self.button_in.isChecked() == True and Main_CHECK['check'] == True:
-                            self.label_text.setText("입/퇴실 버튼을 확인하세요")
-                        # Radiobutton이 퇴실로 체크, 입실내역이 존재하지 않는 상황
-                        elif self.button_out.isChecked() == True and Main_CHECK['check'] == False:
-                            self.label_text.setText("입/퇴실 버튼을 확인하세요")
-                        # Radiobutton이 퇴실로 체크, 입실내역이 존재하는 상황
-                        elif self.button_in.isChecked() == False and Main_CHECK['check'] == True:
-                            prt = (Main_CHECK["userName"] + "님 퇴실처리 되었습니다")
-                            self.setMessage(prt)
-                    else:
-                        self.label_text.setText("이미 입/퇴실 완료되었습니다.\n또는 입/퇴실 버튼을 확인하세요")
-                            
-                        
-
-                else:
-                    self.label_text.setText("다시 인증해주세요")
-        elif self.tabWidget.currentIndex() == 1:
-            
-            ## 읽은 이미지를 문자열로 변환
-            #f.convertImage(0x01)
-
-            result = f.searchTemplate()
-
-            positionNumber = result[0]
                     
-            score = result[1]
-            self.label_enroll.setText("센서에 다시 손가락을 올려주세요")
-            
-            ## 다시 손가락을 올릴 때 까지 대기
-            while f.readImage() == False:
-                pass
+                    ## True => 정상처리, False => 정상처리x
+                    if Main_CHECK['data']:
+                        self.label_text.setText(Main_CHECK['userName']+"님 "+Main_CHECK['status']+"처리 되었습니다")
+                    else:
+                        self.label_text.setText("입/퇴실 버튼을 확인하세요")
+                else:
+                    self.label_text.setText("인식률이 낮습니다. 다시 인증해주세요")
+        ## 지문 등록            
+        elif self.tabWidget.currentIndex() == 1:
 
-            ## 읽은 이미지를 문자열로 변환
-            f.convertImage(0x02)
+            self.label_text.setText("지문을 찍어주세요")
+            self.label_delete.setText("삭제할 지문을 찍어주세요")
             
-            ## 지문정보를 비교, 이미 등록된 지문인 경우
-            if positionNumber >= 0:
-                self.label_enroll.setText("이미 등록된 지문 입니다")
+            # 지문 등록 진행이 가능한 경우
+            if self.enroll_flag:
+                f.convertImage(0x01)
+                finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
                 
-            ## 지문정보를 비교, 정확도가 낮은 경우
-            elif f.compareCharacteristics() == 0:
-                self.label_enroll.setText("정확도가 낮습니다\n조금 더 정확하게 찍어주세요")
+                response = requests.post(URL_FINGER)
+                FINGER_DATA = json.loads(response.text)
                 
-            ## 등록된 지문이 아니고, 정확도가 높은 경우
+                self.score = search_finger_data(FINGER_DATA)
+                
+                # 이미 등록된 지문인 경우
+                if self.score != 0:
+                    self.label_enroll.setText("이미 등록된 지문입니다")
+                else:
+                    self.label_enroll.setText("센서에 다시 손가락을 올려주세요")
+                    
+                    ## 다시 손가락을 올릴 때 까지 대기
+                    while f.readImage() == False:
+                        pass
+
+                    ## 읽은 이미지를 문자열로 변환
+                    f.convertImage(0x02)
+                    finger = str(f.downloadCharacteristics(0x02)).encode('utf-8')
+                
+                    response = requests.post(URL_FINGER)
+                    FINGER_DATA = json.loads(response.text)
+                    
+                    self.score = search_finger_data(FINGER_DATA)
+                    
+                    if self.score != 0:
+                        self.label_enroll.setText("이미 등록된 지문입니다")
+                    else:
+                        ## 지문정보를 비교, 정확도가 낮은 경우
+                        if f.compareCharacteristics() == 0:
+                            self.label_enroll.setText("정확도가 낮습니다\n조금 더 정확하게 찍어주세요")
+                            
+                        ## 등록된 지문이 아니고, 정확도가 높은 경우
+                        else:
+                            Enroll_ID["primaryKEY"] = finger
+                            Enroll_ID["userID"] = Enroll_NAME["std_num"]
+
+                            response = requests.post(URL_ENROLL, data=Enroll_ID)
+                            Enroll_FLAG = json.loads(response.text)
+                            
+                            self.label_enroll.setText(Enroll_FLAG['userName']+"님 지문등록 성공!!")
             else:
-                ## 지문틀 생성
-                #f.createTemplate()
+                self.label_enroll.setText("학번을 먼저 입력해 주세요")
+            self.enroll_flag = False
+        ## 지문 삭제
+        elif self.tabWidget.currentIndex() == 2:
+            self.label_text.setText("지문을 찍어주세요")
+            self.label_enroll.setText("학번을 입력해주세요")
 
-                ## 지문을 저장하고 번호 부여
-                #positionNumber = f.storeTemplate()
-                
-                Enroll_ID["primaryKEY"] = finger
-                Enroll_ID["userID"] = Enroll_NAME["std_num"]
-                Enroll_NAME["std_num"] = ""
-
-                response = requests.post(URL_Enroll, data=Enroll_ID)
-                Enroll_FLAG = json.loads(response.text)
-
-                prt = Enroll_FLAG["userName"] + "님 지문등록 성공"
-                self.label_enroll.setText(prt)
-            
-        else:
             ## 읽은 이미지를 문자열로 전환
             f.convertImage(0x01)
 
-            ## 등록된 지문인지 확인 후 지문넘버 저장
-            result = f.searchTemplate()
-            positionNumber = result[0]
+            finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
             
+            response = requests.post(URL_FINGER)
+            FINGER_DATA = json.loads(response.text)
+
             ## 지문 넘버에 따른 진행과정
-            if positionNumber >= 0:
-                Delete_ID["primaryKEY"] = str(positionNumber)
-                f.deleteTemplate(positionNumber)
-                
-                response = requests.post(URL_Delete, data=Delete_ID)
-                print(Delete_ID)
-                print(response.status_code)
+            if search_finger_data(FINGER_DATA, 'delete'):
+                response = requests.post(URL_DELETE, data=Delete_ID)
                 self.label_delete.setText("지문이 삭제되었습니다")
             else:
                 self.label_delete.setText("지문정보가 잘못되었습니다")
-                
-        timer = Timer(1, self.sensor)
-        timer.start()
+        
+        elif self.tabWidget.currentIndex() == 2:
+            
+            self.label_text.setText("지문을 찍어주세요")
+            self.label_enroll.setText("학번을 입력해주세요")
+            self.label_delete.setText("삭제할 지문을 찍어주세요")
 
+            f.convertImage(0x01)
+            finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+            
+            response = requests.post(URL_FINGER)
+            FINGER_DATA = json.loads(response.text)
+
+            self.score = search_finger_data(FINGER_DATA)
+
+        timer = Timer(1, self.mainMessage)
+        timer.start()
+'''
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -574,4 +640,3 @@ if __name__ == "__main__":
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
-    '''
