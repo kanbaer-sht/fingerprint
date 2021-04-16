@@ -14,14 +14,15 @@ import pygame
 # dotenv를 사용해 url주소 가져오기
 load_dotenv(verbose=True)
 
-URL_Main = os.getenv('URL_Main')
-URL_Numcheck = os.getenv('URL_Numcheck')
-URL_Enroll = os.getenv('URL_Enroll')
-URL_Delete = os.getenv('URL_Delete')
-URL_Limit = os.getenv('URL_Limit')
+URL_MAIN = os.getenv('URL_MAIN')
+URL_NUMCHECK = os.getenv('URL_NUMCHECK')
+URL_ENROLL = os.getenv('URL_ENROLL')
+URL_DELETE = os.getenv('URL_DELETE')
+URL_FINGER = os.getenv('URL_FINGER')
+URL_LIMIT = os.getenv('URL_LIMIT')
 
 Main_ID ={
-    "primaryKEY" : 'NULL',
+    "std_num" : 'NULL',
     "tabNum" : 'NULL',
     "tab" : 'true'
 }
@@ -33,8 +34,8 @@ Main_CHECK = {
 }
 
 Enroll_NAME = {
-    "std_num" : '',
-    "tabNum" : 'NULL'       # 현재 탭 넘버링
+    "std_num" : '51',
+    "tabNum" : '등록'       # 현재 탭 넘버링
 }
 
 Enroll_FLAG = {
@@ -51,6 +52,7 @@ Delete_ID = {
     "primaryKEY" : 'NULL',
     "tabNum" : 'NULL'
 }
+
 """
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
@@ -65,6 +67,19 @@ except Exception as e:
     exit(1)
 """
 
+def req_to_server(URL, req_data=None):
+    if req_data == None:
+        return requests.post(URL)
+    else:
+        return requests.post(URL, data=req_data)
+
+response = req_to_server(URL_FINGER)
+FINGER_DATA = json.loads(response.text)
+
+for i in range(0, len(FINGER_DATA)):
+    print(type(FINGER_DATA[i]['std_num']))
+
+'''
 class Ui_Dialog(object):
     first_flag = 0
     def setupUi(self, Dialog):
@@ -430,8 +445,15 @@ class Ui_Dialog(object):
         
         while f.readImage() == False:
             pass
+
         f.convertImage(0x01)
         finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+
+        response = req_to_server(URL_FINGER)
+        FINGER_DATA = response.text
+        print(FINGER_DATA)
+        for i in enumerate(response.text):
+            print(i)
 
         if self.tabWidget.currentIndex() == 0:
 
@@ -552,3 +574,4 @@ if __name__ == "__main__":
     ui.setupUi(Dialog)
     Dialog.show()
     sys.exit(app.exec_())
+    '''
