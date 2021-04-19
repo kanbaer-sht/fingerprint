@@ -122,6 +122,7 @@ def reset_all_dic():
         "outgoing_time" : ""
     }
 
+
 def search_finger_data(data, mode='finger'):
     if mode == 'finger':
         for i in range(0, len(data)):
@@ -137,6 +138,7 @@ def search_finger_data(data, mode='finger'):
             if score != 0:
                 Delete_ID['primaryKEY'] = data[i]['std_num']
                 return True
+    f.storeTemplate(0x02)
     return 0
 
 class Ui_Dialog(object):
@@ -564,6 +566,7 @@ class Ui_Dialog(object):
     def mainMessage(self):
         reset_all_dic()
         self.score = 0
+        
         while f.readImage() == False:
             pass
         
@@ -626,12 +629,6 @@ class Ui_Dialog(object):
 
                     ## 읽은 이미지를 문자열로 변환
                     f.convertImage(0x02)
-                    finger = str(f.downloadCharacteristics(0x02)).encode('utf-8')
-                
-                    response = requests.post(URL_FINGER)
-                    FINGER_DATA = json.loads(response.text)
-                    
-                    self.score = search_finger_data(FINGER_DATA)
                     
                     if self.score != 0:
                         self.label_enroll.setText("이미 등록된 지문입니다")
@@ -708,5 +705,5 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
-    Dialog.showFullScreen()
+    Dialog.show()
     sys.exit(app.exec_())
