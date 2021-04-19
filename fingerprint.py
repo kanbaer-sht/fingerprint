@@ -142,11 +142,13 @@ def search_finger_data(data, mode='finger'):
     return 0
 
 class Ui_Dialog(object):
-    
+
     def __init__(self):
         super().__init__()
         self.score = 0
         self.enroll_flag = False
+        self.first_flag = True
+
     def setupUi(self, Dialog):
         # 지문인식기 메인 윈도우
         Dialog.setObjectName("FingerPrint")
@@ -566,135 +568,138 @@ class Ui_Dialog(object):
     def mainMessage(self):
         reset_all_dic()
         self.score = 0
-        
-        while f.readImage() == False:
-            pass
-        
-        ## 메인 출석화면
-        if self.tabWidget.currentIndex() == 0:
-            self.label_enroll.setText("학번을 입력해주세요")
-            self.label_delete.setText("삭제할 지문을 찍어주세요")
-            self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
 
-            f.convertImage(0x01)
-            finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+        if self.first_flag:
+            self.first_flag == False
+        else:
+            while f.readImage() == False:
+                pass
             
-            response = requests.post(URL_FINGER)
-            FINGER_DATA = json.loads(response.text)
+            ## 메인 출석화면
+            if self.tabWidget.currentIndex() == 0:
+                self.label_enroll.setText("학번을 입력해주세요")
+                self.label_delete.setText("삭제할 지문을 찍어주세요")
+                self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
 
-            self.score = search_finger_data(FINGER_DATA)
-
-            ## 지문 검사
-            if self.score == 0: 
-                self.label_text.setText("등록되지 않은 지문입니다")
-                time.sleep(1)
-            else:
-                if self.score >= 45:
-                    response = requests.post(URL_MAIN, data=Main_ID)
-                    Main_CHECK = json.loads(response.text)
-                    
-                    ## True => 정상처리, False => 정상처리x
-                    if Main_CHECK['data']:
-                        self.label_text.setText(Main_CHECK['userName']+"님 "+Main_CHECK['status']+"처리 되었습니다")
-                    else:
-                        self.label_text.setText("입/퇴실 버튼을 확인하세요")
-                else:
-                    self.label_text.setText("인식률이 낮습니다. 다시 인증해주세요")
-        ## 지문 등록            
-        elif self.tabWidget.currentIndex() == 1:
-
-            self.label_text.setText("지문을 찍어주세요")
-            self.label_delete.setText("삭제할 지문을 찍어주세요")
-            self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
-            
-            # 지문 등록 진행이 가능한 경우
-            if self.enroll_flag:
                 f.convertImage(0x01)
                 finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
                 
                 response = requests.post(URL_FINGER)
                 FINGER_DATA = json.loads(response.text)
-                
-                self.score = search_finger_data(FINGER_DATA)
-                
-                # 이미 등록된 지문인 경우
-                if self.score != 0:
-                    self.label_enroll.setText("이미 등록된 지문입니다")
-                else:
-                    self.label_enroll.setText("센서에 다시 손가락을 올려주세요")
-                    
-                    ## 다시 손가락을 올릴 때 까지 대기
-                    while f.readImage() == False:
-                        pass
 
-                    ## 읽은 이미지를 문자열로 변환
-                    f.convertImage(0x02)
+                self.score = search_finger_data(FINGER_DATA)
+
+                ## 지문 검사
+                if self.score == 0: 
+                    self.label_text.setText("등록되지 않은 지문입니다")
+                    time.sleep(1)
+                else:
+                    if self.score >= 45:
+                        response = requests.post(URL_MAIN, data=Main_ID)
+                        Main_CHECK = json.loads(response.text)
+                        
+                        ## True => 정상처리, False => 정상처리x
+                        if Main_CHECK['data']:
+                            self.label_text.setText(Main_CHECK['userName']+"님 "+Main_CHECK['status']+"처리 되었습니다")
+                        else:
+                            self.label_text.setText("입/퇴실 버튼을 확인하세요")
+                    else:
+                        self.label_text.setText("인식률이 낮습니다. 다시 인증해주세요")
+            ## 지문 등록            
+            elif self.tabWidget.currentIndex() == 1:
+
+                self.label_text.setText("지문을 찍어주세요")
+                self.label_delete.setText("삭제할 지문을 찍어주세요")
+                self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
+                
+                # 지문 등록 진행이 가능한 경우
+                if self.enroll_flag:
+                    f.convertImage(0x01)
+                    finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
                     
+                    response = requests.post(URL_FINGER)
+                    FINGER_DATA = json.loads(response.text)
+                    
+                    self.score = search_finger_data(FINGER_DATA)
+                    
+                    # 이미 등록된 지문인 경우
                     if self.score != 0:
                         self.label_enroll.setText("이미 등록된 지문입니다")
                     else:
-                        ## 지문정보를 비교, 정확도가 낮은 경우
-                        if f.compareCharacteristics() == 0:
-                            self.label_enroll.setText("정확도가 낮습니다\n조금 더 정확하게 찍어주세요")
-                            
-                        ## 등록된 지문이 아니고, 정확도가 높은 경우
+                        self.label_enroll.setText("센서에 다시 손가락을 올려주세요")
+                        
+                        ## 다시 손가락을 올릴 때 까지 대기
+                        while f.readImage() == False:
+                            pass
+
+                        ## 읽은 이미지를 문자열로 변환
+                        f.convertImage(0x02)
+                        
+                        if self.score != 0:
+                            self.label_enroll.setText("이미 등록된 지문입니다")
                         else:
-                            Enroll_ID["primaryKEY"] = finger
-                            Enroll_ID["userID"] = Enroll_NAME["std_num"]
+                            ## 지문정보를 비교, 정확도가 낮은 경우
+                            if f.compareCharacteristics() == 0:
+                                self.label_enroll.setText("정확도가 낮습니다\n조금 더 정확하게 찍어주세요")
+                                
+                            ## 등록된 지문이 아니고, 정확도가 높은 경우
+                            else:
+                                Enroll_ID["primaryKEY"] = finger
+                                Enroll_ID["userID"] = Enroll_NAME["std_num"]
 
-                            response = requests.post(URL_ENROLL, data=Enroll_ID)
-                            Enroll_FLAG = json.loads(response.text)
-                            
-                            self.label_enroll.setText(Enroll_FLAG['userName']+"님 지문등록 성공!!")
-            else:
-                self.label_enroll.setText("학번을 먼저 입력해 주세요")
-            self.enroll_flag = False
-        ## 지문 삭제
-        elif self.tabWidget.currentIndex() == 2:
-            self.label_text.setText("지문을 찍어주세요")
-            self.label_enroll.setText("학번을 입력해주세요")
-            self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
-
-            ## 읽은 이미지를 문자열로 전환
-            f.convertImage(0x01)
-
-            finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-            
-            response = requests.post(URL_FINGER)
-            FINGER_DATA = json.loads(response.text)
-
-            ## 지문 넘버에 따른 진행과정
-            if search_finger_data(FINGER_DATA, 'delete'):
-                response = requests.post(URL_DELETE, data=Delete_ID)
-                self.label_delete.setText("지문이 삭제되었습니다")
-            else:
-                self.label_delete.setText("지문정보가 잘못되었습니다")
-        ## 외출
-        elif self.tabWidget.currentIndex() == 3:
-            self.select_reason()
-            self.label_text.setText("지문을 찍어주세요")
-            self.label_enroll.setText("학번을 입력해주세요")
-            self.label_delete.setText("삭제할 지문을 찍어주세요")
-
-            f.convertImage(0x01)
-            finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-            
-            response = requests.post(URL_FINGER)
-            FINGER_DATA = json.loads(response.text)
-
-            self.score = search_finger_data(FINGER_DATA)
-            Outgo_ID['primaryKEY'] = int(Main_ID['primaryKEY'])
-            
-            if self.score != 0:
-                response = requests.post(URL_OUT, data=Outgo_ID)
-                Outgo_FLAG = json.loads(response.text)
-                
-                if Outgo_FLAG['out_time'] == '00:00:00':
-                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 외출처리 되었습니다!\n사유 : " + Outgo_FLAG['reason'])
+                                response = requests.post(URL_ENROLL, data=Enroll_ID)
+                                Enroll_FLAG = json.loads(response.text)
+                                
+                                self.label_enroll.setText(Enroll_FLAG['userName']+"님 지문등록 성공!!")
                 else:
-                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 복귀처리 되었습니다!\n외출시간 : " + Outgo_FLAG['outgoing_time'])
-            else:
-                self.label_out.setText("지문정보가 잘못되었습니다")
+                    self.label_enroll.setText("학번을 먼저 입력해 주세요")
+                self.enroll_flag = False
+            ## 지문 삭제
+            elif self.tabWidget.currentIndex() == 2:
+                self.label_text.setText("지문을 찍어주세요")
+                self.label_enroll.setText("학번을 입력해주세요")
+                self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
+
+                ## 읽은 이미지를 문자열로 전환
+                f.convertImage(0x01)
+
+                finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+                
+                response = requests.post(URL_FINGER)
+                FINGER_DATA = json.loads(response.text)
+
+                ## 지문 넘버에 따른 진행과정
+                if search_finger_data(FINGER_DATA, 'delete'):
+                    response = requests.post(URL_DELETE, data=Delete_ID)
+                    self.label_delete.setText("지문이 삭제되었습니다")
+                else:
+                    self.label_delete.setText("지문정보가 잘못되었습니다")
+            ## 외출
+            elif self.tabWidget.currentIndex() == 3:
+                self.select_reason()
+                self.label_text.setText("지문을 찍어주세요")
+                self.label_enroll.setText("학번을 입력해주세요")
+                self.label_delete.setText("삭제할 지문을 찍어주세요")
+
+                f.convertImage(0x01)
+                finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+                
+                response = requests.post(URL_FINGER)
+                FINGER_DATA = json.loads(response.text)
+
+                self.score = search_finger_data(FINGER_DATA)
+                Outgo_ID['primaryKEY'] = int(Main_ID['primaryKEY'])
+                
+                if self.score != 0:
+                    response = requests.post(URL_OUT, data=Outgo_ID)
+                    Outgo_FLAG = json.loads(response.text)
+                    
+                    if Outgo_FLAG['out_time'] == '00:00:00':
+                        self.label_out.setText(Outgo_FLAG['std_name'] + "님 외출처리 되었습니다!\n사유 : " + Outgo_FLAG['reason'])
+                    else:
+                        self.label_out.setText(Outgo_FLAG['std_name'] + "님 복귀처리 되었습니다!\n외출시간 : " + Outgo_FLAG['outgoing_time'])
+                else:
+                    self.label_out.setText("지문정보가 잘못되었습니다")
 
         timer = Timer(1, self.mainMessage)
         timer.start()
