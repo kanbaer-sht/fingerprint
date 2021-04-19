@@ -50,6 +50,18 @@ Enroll_ID = {
 Delete_ID = {
     "primaryKEY" : 'NULL'
 }
+
+Outgo_ID = {
+    "primaryKEY" : 'NULL',
+    "reason" : ''
+}
+
+Outgo_FLAG = {
+        "std_name" : "",
+        "in_time" : "",
+        "out_time" : "",
+        "reason" : ""
+    }
 '''
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
@@ -64,7 +76,7 @@ except Exception as e:
     exit(1)
 '''
 def reset_all_dic():
-    global Main_ID, Main_CHECK, Enroll_NAME, Enroll_FLAG, Enroll_ID, Delete_ID
+    global Main_ID, Main_CHECK, Enroll_NAME, Enroll_FLAG, Enroll_ID, Delete_ID, Outgo_ID, Outgo_FLAG
     Main_ID ={
         "primaryKEY" : 'NULL',
         "tab" : 'true'
@@ -93,6 +105,18 @@ def reset_all_dic():
 
     Delete_ID = {
         "primaryKEY" : 'NULL'
+    }
+
+    Outgo_ID = {
+        "primaryKEY" : 'NULL',
+        "reason" : ''
+    }
+
+    Outgo_FLAG = {
+        "std_name" : "",
+        "in_time" : "",
+        "out_time" : "",
+        "reason" : ""
     }
 
 def search_finger_data(data, mode='finger'):
@@ -318,15 +342,20 @@ class Ui_Dialog(object):
         self.button_gz = QtWidgets.QRadioButton(self.out_groupBox)
         self.button_gz.setGeometry(QtCore.QRect(350, 10, 181, 41))
         self.button_gz.setObjectName("button_gz")
+        self.button_etc = QtWidgets.QRadioButton(self.out_groupBox)
+        self.button_etc.setGeometry(QtCore.QRect(520, 10, 181, 41))
+        self.button_etc.setObjectName("button_etc")
         font = QtGui.QFont()
         font.setFamily("Arial Black")
         font.setPointSize(20)
         self.button_meal.setFont(font)
         self.button_mensetsu.setFont(font)
         self.button_gz.setFont(font)
-        self.button_meal.clicked.connect(self.change_state_in)
-        self.button_mensetsu.clicked.connect(self.change_state_in)
-        self.button_gz.clicked.connect(self.change_state_out)
+        self.button_etc.setFont(font)
+        self.button_meal.clicked.connect(self.change_state_meal)
+        self.button_mensetsu.clicked.connect(self.change_state_mensetsu)
+        self.button_gz.clicked.connect(self.change_state_gz)
+        self.button_etc.clicked.connect(self.change_state_etc)
         self.tabWidget.addTab(self.Outgo, "")
 
         # 스타일시트
@@ -414,6 +443,7 @@ class Ui_Dialog(object):
         self.button_meal.setChecked(True)
         self.button_mensetsu.setText(_translate("Dialog", "면접연습"))
         self.button_gz.setText(_translate("Dialog", "글로벌존"))
+        self.button_etc.setText(_translate("Dialog", "기타"))
 
         self.showtime()
         #self.mainMessage()
@@ -453,6 +483,18 @@ class Ui_Dialog(object):
         Main_ID["tab"] = "true"
     def change_state_out(self):
         Main_ID["tab"] = "false"
+    def change_state_meal(self):
+        Outgo_ID["reason"] = "식사"
+        print(Outgo_ID)
+    def change_state_mensetsu(self):
+        Outgo_ID["reason"] = "면접연습"
+        print(Outgo_ID)
+    def change_state_gz(self):
+        Outgo_ID["reason"] = "글로벌존"
+        print(Outgo_ID)
+    def change_state_etc(self):
+        Outgo_ID["reason"] = "기타"
+        print(Outgo_ID)
     
     # 입력한 넘버패드 버튼에 따라 서버에 전송할 학번 값 수정
     def num_input0(self):
@@ -505,7 +547,7 @@ class Ui_Dialog(object):
             self.label_enroll.setText(prt)
         else:
             self.label_enroll.setText("등록정보가 확인되지 않습니다")
-        '''
+        
     def mainMessage(self):
         reset_all_dic()
         self.score = 0
@@ -614,8 +656,8 @@ class Ui_Dialog(object):
                 self.label_delete.setText("지문이 삭제되었습니다")
             else:
                 self.label_delete.setText("지문정보가 잘못되었습니다")
-        
-        elif self.tabWidget.currentIndex() == 2:
+        ## 외출
+        elif self.tabWidget.currentIndex() == 3:
             
             self.label_text.setText("지문을 찍어주세요")
             self.label_enroll.setText("학번을 입력해주세요")
@@ -629,9 +671,21 @@ class Ui_Dialog(object):
 
             self.score = search_finger_data(FINGER_DATA)
 
+            if score != 0:
+                response = requests.post(URL_OUT)
+                Outgo_FLAG = response.text
+
+                if Outgo_FLAG['out_time'] == 'null':
+                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 외출처리 되었습니다!\n사유 : " + Outgo_FLAG["reason"])
+                else:
+                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 복귀처리 되었습니다!")
+            else:
+                self.label_out.setText("지문정보가 잘못되었습니다")
+
+
         timer = Timer(1, self.mainMessage)
         timer.start()
-'''
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
