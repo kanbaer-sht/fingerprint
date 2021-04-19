@@ -496,15 +496,16 @@ class Ui_Dialog(object):
         Outgo_ID["reason"] = "글로벌존"
     def change_state_etc(self):
         Outgo_ID["reason"] = "기타"
-    
+        print(Outgo_ID)
+        
     def select_reason(self):
-        if self.button_meal.isChecked:
+        if self.button_meal.isChecked == True:
             Outgo_ID["reason"] = "식사"
-        elif self.button_mensetsu.isChecked:
+        elif self.button_mensetsu.isChecked == True:
             Outgo_ID["reason"] = "면접연습"
-        elif self.button_gz.isChecked:
+        elif self.button_gz.isChecked == True:
             Outgo_ID["reason"] = "글로벌존"
-        else:
+        elif self.button_etc.isChecked == True:
             Outgo_ID["reason"] = "기타"
     
     # 입력한 넘버패드 버튼에 따라 서버에 전송할 학번 값 수정
