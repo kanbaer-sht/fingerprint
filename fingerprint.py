@@ -9,7 +9,7 @@ import time, json, requests
 import sys, os
 import pygame
 
-#from pyfingerprint.pyfingerprint import PyFingerprint
+from pyfingerprint.pyfingerprint import PyFingerprint
 
 # dotenv를 사용해 url주소 가져오기
 load_dotenv(verbose=True)
@@ -20,6 +20,7 @@ URL_ENROLL = os.getenv('URL_ENROLL')
 URL_DELETE = os.getenv('URL_DELETE')
 URL_FINGER = os.getenv('URL_FINGER')
 URL_LIMIT = os.getenv('URL_LIMIT')
+URL_OUT = os.getenv('URL_OUT')
 
 Main_ID ={
     "primaryKEY" : 'NULL',
@@ -53,16 +54,17 @@ Delete_ID = {
 
 Outgo_ID = {
     "primaryKEY" : 'NULL',
-    "reason" : ''
+    "reason" : '식사'
 }
 
 Outgo_FLAG = {
-        "std_name" : "",
-        "in_time" : "",
-        "out_time" : "",
-        "reason" : ""
+        "std_name" : "null",
+        "in_time" : "null",
+        "out_time" : "null",
+        "reason" : "null",
+        "outgoing_time":"null"
     }
-'''
+
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
 
@@ -74,7 +76,7 @@ try:
 except Exception as e:
     print('센서 정보를 확인할 수 없습니다!')
     exit(1)
-'''
+
 def reset_all_dic():
     global Main_ID, Main_CHECK, Enroll_NAME, Enroll_FLAG, Enroll_ID, Delete_ID, Outgo_ID, Outgo_FLAG
     Main_ID ={
@@ -109,14 +111,15 @@ def reset_all_dic():
 
     Outgo_ID = {
         "primaryKEY" : 'NULL',
-        "reason" : ''
+        "reason" : '식사'
     }
 
     Outgo_FLAG = {
         "std_name" : "",
         "in_time" : "",
         "out_time" : "",
-        "reason" : ""
+        "reason" : "",
+        "outgoing_time" : ""
     }
 
 def search_finger_data(data, mode='finger'):
@@ -330,20 +333,20 @@ class Ui_Dialog(object):
 
         # 외출 사유 버튼
         self.out_groupBox = QtWidgets.QGroupBox(self.Outgo)
-        self.out_groupBox.setGeometry(QtCore.QRect(70, 200, 600, 51))
+        self.out_groupBox.setGeometry(QtCore.QRect(70, 200, 700, 51))
         self.out_groupBox.setTitle("")
         self.out_groupBox.setObjectName("out_groupBox")
         self.button_meal = QtWidgets.QRadioButton(self.out_groupBox)
-        self.button_meal.setGeometry(QtCore.QRect(10, 10, 181, 41))
+        self.button_meal.setGeometry(QtCore.QRect(25, 10, 181, 41))
         self.button_meal.setObjectName("button_meal")
         self.button_mensetsu = QtWidgets.QRadioButton(self.out_groupBox)
-        self.button_mensetsu.setGeometry(QtCore.QRect(180, 10, 181, 41))
+        self.button_mensetsu.setGeometry(QtCore.QRect(170, 10, 181, 41))
         self.button_mensetsu.setObjectName("button_mensetsu")
         self.button_gz = QtWidgets.QRadioButton(self.out_groupBox)
-        self.button_gz.setGeometry(QtCore.QRect(350, 10, 181, 41))
+        self.button_gz.setGeometry(QtCore.QRect(355, 10, 181, 41))
         self.button_gz.setObjectName("button_gz")
         self.button_etc = QtWidgets.QRadioButton(self.out_groupBox)
-        self.button_etc.setGeometry(QtCore.QRect(520, 10, 181, 41))
+        self.button_etc.setGeometry(QtCore.QRect(540, 10, 181, 41))
         self.button_etc.setObjectName("button_etc")
         font = QtGui.QFont()
         font.setFamily("Arial Black")
@@ -364,6 +367,7 @@ class Ui_Dialog(object):
         border:2px solid #414c5d")
         self.label_text.setStyleSheet("color:#414c5d; background-color:#FFFFFF;\
         border:2px solid #414c5d")
+        self.groupBox.setStyleSheet("color:#414c5d")
 
         # 지문 등록
         self.label_enroll.setStyleSheet("color:#414c5d; background-color:#ffffff;\
@@ -402,6 +406,7 @@ class Ui_Dialog(object):
         border:2px solid #414c5d")
         self.label_out.setStyleSheet("color:#414c5d; background-color:#ffffff;\
         border:2px solid #414c5d")
+        self.out_groupBox.setStyleSheet("color:#414c5d")
 
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
@@ -446,7 +451,7 @@ class Ui_Dialog(object):
         self.button_etc.setText(_translate("Dialog", "기타"))
 
         self.showtime()
-        #self.mainMessage()
+        self.mainMessage()
 
     # 시간 관련 함수
     def showtime(self):
@@ -485,16 +490,22 @@ class Ui_Dialog(object):
         Main_ID["tab"] = "false"
     def change_state_meal(self):
         Outgo_ID["reason"] = "식사"
-        print(Outgo_ID)
     def change_state_mensetsu(self):
         Outgo_ID["reason"] = "면접연습"
-        print(Outgo_ID)
     def change_state_gz(self):
         Outgo_ID["reason"] = "글로벌존"
-        print(Outgo_ID)
     def change_state_etc(self):
         Outgo_ID["reason"] = "기타"
-        print(Outgo_ID)
+    
+    def select_reason(self):
+        if self.button_meal.isChecked:
+            Outgo_ID["reason"] = "식사"
+        elif self.button_mensetsu.isChecked:
+            Outgo_ID["reason"] = "면접연습"
+        elif self.button_gz.isChecked:
+            Outgo_ID["reason"] = "글로벌존"
+        else:
+            Outgo_ID["reason"] = "기타"
     
     # 입력한 넘버패드 버튼에 따라 서버에 전송할 학번 값 수정
     def num_input0(self):
@@ -547,6 +558,7 @@ class Ui_Dialog(object):
             self.label_enroll.setText(prt)
         else:
             self.label_enroll.setText("등록정보가 확인되지 않습니다")
+            reset_all_dic()
         
     def mainMessage(self):
         reset_all_dic()
@@ -558,6 +570,7 @@ class Ui_Dialog(object):
         if self.tabWidget.currentIndex() == 0:
             self.label_enroll.setText("학번을 입력해주세요")
             self.label_delete.setText("삭제할 지문을 찍어주세요")
+            self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
 
             f.convertImage(0x01)
             finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
@@ -588,6 +601,7 @@ class Ui_Dialog(object):
 
             self.label_text.setText("지문을 찍어주세요")
             self.label_delete.setText("삭제할 지문을 찍어주세요")
+            self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
             
             # 지문 등록 진행이 가능한 경우
             if self.enroll_flag:
@@ -641,6 +655,7 @@ class Ui_Dialog(object):
         elif self.tabWidget.currentIndex() == 2:
             self.label_text.setText("지문을 찍어주세요")
             self.label_enroll.setText("학번을 입력해주세요")
+            self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
 
             ## 읽은 이미지를 문자열로 전환
             f.convertImage(0x01)
@@ -658,7 +673,7 @@ class Ui_Dialog(object):
                 self.label_delete.setText("지문정보가 잘못되었습니다")
         ## 외출
         elif self.tabWidget.currentIndex() == 3:
-            
+            self.select_reason()
             self.label_text.setText("지문을 찍어주세요")
             self.label_enroll.setText("학번을 입력해주세요")
             self.label_delete.setText("삭제할 지문을 찍어주세요")
@@ -670,18 +685,18 @@ class Ui_Dialog(object):
             FINGER_DATA = json.loads(response.text)
 
             self.score = search_finger_data(FINGER_DATA)
-
-            if score != 0:
-                response = requests.post(URL_OUT)
-                Outgo_FLAG = response.text
-
-                if Outgo_FLAG['out_time'] == 'null':
-                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 외출처리 되었습니다!\n사유 : " + Outgo_FLAG["reason"])
+            Outgo_ID['primaryKEY'] = int(Main_ID['primaryKEY'])
+            
+            if self.score != 0:
+                response = requests.post(URL_OUT, data=Outgo_ID)
+                Outgo_FLAG = json.loads(response.text)
+                
+                if Outgo_FLAG['out_time'] == '00:00:00':
+                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 외출처리 되었습니다!\n사유 : " + Outgo_FLAG['reason'])
                 else:
-                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 복귀처리 되었습니다!")
+                    self.label_out.setText(Outgo_FLAG['std_name'] + "님 복귀처리 되었습니다!\n외출시간 : " + Outgo_FLAG['outgoing_time'])
             else:
                 self.label_out.setText("지문정보가 잘못되었습니다")
-
 
         timer = Timer(1, self.mainMessage)
         timer.start()
@@ -692,5 +707,5 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
-    Dialog.show()
+    Dialog.showFullScreen()
     sys.exit(app.exec_())
