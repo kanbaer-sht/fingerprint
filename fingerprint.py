@@ -5,7 +5,7 @@ from PyQt5.QtCore import QTime, QDateTime, Qt
 from threading import Timer
 from dotenv import load_dotenv
 import threading
-import time, json, requests
+import time, json, requests, socket
 import sys, os
 import pygame
 
@@ -65,9 +65,12 @@ Outgo_FLAG = {
         "outgoing_time":"null"
     }
 
+Std_DATA = {
+
+}
+
 pygame.mixer.init(16000, -16, 1, 2048)
 alarm = pygame.mixer.music.load("/home/pi/Desktop/alarm.mp3")
-
 
 # 지문인식기 연결
 try:
@@ -77,6 +80,23 @@ except Exception as e:
     print('센서 정보를 확인할 수 없습니다!')
     exit(1)
 
+def get_Finger_List():
+    response = requests.post(URL_FINGER)
+    finger_list = json.loads(response.text)
+
+    for i in range(0, len(finger_list)):
+        f.deleteTemplate(i)
+        f.uploadCharacteristics(0x01, eval(finger_list[i]['serial_num']))
+        f.createTemplate()
+        positionNumber = f.storeTemplate()
+        Std_DATA[i] = finger_list[i]['std_num']
+time.sleep(5)
+
+try:
+    get_Finger_List()
+except Exception as e:
+    sys.stdout = open('error.txt','w')
+    
 def reset_all_dic():
     global Main_ID, Main_CHECK, Enroll_NAME, Enroll_FLAG, Enroll_ID, Delete_ID, Outgo_ID, Outgo_FLAG
     Main_ID ={
@@ -145,9 +165,9 @@ class Ui_Dialog(object):
 
     def __init__(self):
         super().__init__()
-        self.score = 0
         self.enroll_flag = False
         self.first_flag = True
+        #get_Finger_List()
 
     def setupUi(self, Dialog):
         # 지문인식기 메인 윈도우
@@ -158,6 +178,7 @@ class Ui_Dialog(object):
         self.tabWidget = QtWidgets.QTabWidget(Dialog)
         self.tabWidget.setGeometry(QtCore.QRect(-4, -1, 811, 481))
         self.tabWidget.setObjectName("tabWidget")
+        self.tabWidget.setStyleSheet("QTabBar::tab{width: 200px; height:50px;}")
         self.Main = QtWidgets.QWidget()
         self.Main.setObjectName("Main")
 
@@ -258,6 +279,11 @@ class Ui_Dialog(object):
         # 지문 등록 안내메세지 박스
         self.label_enroll = QtWidgets.QLabel(self.Enroll)
         self.label_enroll.setGeometry(QtCore.QRect(20, 30, 771, 131))
+        font = QtGui.QFont()
+        font.setFamily("Arial Black")
+        font.setPointSize(24)
+        font.setBold(True)
+        font.setWeight(75)
         self.label_enroll.setFont(font)
         self.label_enroll.setAutoFillBackground(True)
         self.label_enroll.setFrameShape(QtWidgets.QFrame.WinPanel)
@@ -466,17 +492,18 @@ class Ui_Dialog(object):
         # 하교시간 알람등에 사용할 시간만 따로 구하기
         current_time = QTime.currentTime()
         current_time = current_time.toString()
-
+            
         # 하교시간 알람
-        if(current_time == "23:50:10" or current_time == "23:55:10"):
+        if current_time == "22:30:00":
             pygame.mixer.music.play()
         # 하교시간 리미트
-        if(current_time == "23:58:10"):
-            response = requests.post(URL_Limit)
+        if current_time == "22:30:00":
+            response = requests.post(URL_LIMIT)
             print(response.status_code)
-
+        
         self.label_time.setText(current_date)
         self.out_time.setText(current_date)
+        
         
         if self.button_in.isChecked():
             Main_ID['tab'] = 'true'
@@ -500,7 +527,7 @@ class Ui_Dialog(object):
         Outgo_ID["reason"] = "글로벌존"
     def change_state_etc(self):
         Outgo_ID["reason"] = "기타"
-        print(Outgo_ID)
+        #print(Outgo_ID)
         
     def select_reason(self):
         if self.button_meal.isChecked == True:
@@ -550,30 +577,38 @@ class Ui_Dialog(object):
 
     # 지문등록 확인 버튼 클릭 시, 실행할 함수
     def enroll_send(self):
-
-        ## POST 통신을 이용하여 DB로 학번을 전송 후 존재 유무 수신
-        response = requests.post(URL_NUMCHECK, data=Enroll_NAME)
-
-        ## 돌아오는 존재 유무 값을 받은후 json 형에서 다시 딕셔너리로 변환
-        Enroll_FLAG = json.loads(response.text)
+        try:
+            ## POST 통신을 이용하여 DB로 학번을 전송 후 존재 유무 수신
+            response = requests.post(URL_NUMCHECK, data=Enroll_NAME)
+            ## 돌아오는 존재 유무 값을 받은후 json 형에서 다시 딕셔너리로 변환
+            Enroll_FLAG = json.loads(response.text)
+        except Exception as e:
+            self.label_enroll.setText("네트워크 에러 발생!!\n다시 진행해주세요")
+            self.mainMessage()
 
         if(Enroll_FLAG["flag_exist"] == "true"):
             self.enroll_flag = True
-            prt = Enroll_FLAG["userName"] + "님 지문 등록을 진행합니다\n센서에 손가락을 올려주세요"
-            self.label_enroll.setText(prt)
+            self.label_enroll.setText(Enroll_FLAG["userName"] + "님 지문 등록을 진행합니다\n센서에 손가락을 올려주세요")
         else:
             self.label_enroll.setText("등록정보가 확인되지 않습니다")
             reset_all_dic()
         
     def mainMessage(self):
         reset_all_dic()
-        self.score = 0
-
+        
         if self.first_flag:
-            self.first_flag == False
+            self.first_flag = False
         else:
             while f.readImage() == False:
                 pass
+
+            f.convertImage(0x01)
+                
+            result = f.searchTemplate()
+            
+            positionNumber = result[0]
+            score = result[1]
+            
             
             ## 메인 출석화면
             if self.tabWidget.currentIndex() == 0:
@@ -581,22 +616,23 @@ class Ui_Dialog(object):
                 self.label_delete.setText("삭제할 지문을 찍어주세요")
                 self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
 
-                f.convertImage(0x01)
-                finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-                
-                response = requests.post(URL_FINGER)
-                FINGER_DATA = json.loads(response.text)
-
-                self.score = search_finger_data(FINGER_DATA)
-
                 ## 지문 검사
-                if self.score == 0: 
+                if positionNumber == -1: 
                     self.label_text.setText("등록되지 않은 지문입니다")
                     time.sleep(1)
                 else:
-                    if self.score >= 45:
-                        response = requests.post(URL_MAIN, data=Main_ID)
-                        Main_CHECK = json.loads(response.text)
+                    if score >= 35:
+                        try:
+                            Main_ID['primaryKEY'] = Std_DATA[positionNumber]
+                            response = requests.post(URL_MAIN, data=Main_ID)
+                            Main_CHECK = json.loads(response.text)
+                        except Exception as e:
+                            sys.stdout = open('error.txt','w')
+                            error_date = QDateTime.currentDateTime()
+                            error_date = error_date.toString('yyyy-MM-dd hh:mm:ss')
+                            print(error_date," : ",e,"\n")
+                            self.label_text.setText("네트워크 에러 발생!!\n다시 진행해주세요")
+                            self.mainMessage()
                         
                         ## True => 정상처리, False => 정상처리x
                         if Main_CHECK['data']:
@@ -614,16 +650,8 @@ class Ui_Dialog(object):
                 
                 # 지문 등록 진행이 가능한 경우
                 if self.enroll_flag:
-                    f.convertImage(0x01)
-                    finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-                    
-                    response = requests.post(URL_FINGER)
-                    FINGER_DATA = json.loads(response.text)
-                    
-                    self.score = search_finger_data(FINGER_DATA)
-                    
                     # 이미 등록된 지문인 경우
-                    if self.score != 0:
+                    if positionNumber != -1:
                         self.label_enroll.setText("이미 등록된 지문입니다")
                     else:
                         self.label_enroll.setText("센서에 다시 손가락을 올려주세요")
@@ -635,7 +663,7 @@ class Ui_Dialog(object):
                         ## 읽은 이미지를 문자열로 변환
                         f.convertImage(0x02)
                         
-                        if self.score != 0:
+                        if positionNumber != -1:
                             self.label_enroll.setText("이미 등록된 지문입니다")
                         else:
                             ## 지문정보를 비교, 정확도가 낮은 경우
@@ -644,11 +672,22 @@ class Ui_Dialog(object):
                                 
                             ## 등록된 지문이 아니고, 정확도가 높은 경우
                             else:
-                                Enroll_ID["primaryKEY"] = finger
-                                Enroll_ID["userID"] = Enroll_NAME["std_num"]
-
-                                response = requests.post(URL_ENROLL, data=Enroll_ID)
-                                Enroll_FLAG = json.loads(response.text)
+                                try:
+                                    Enroll_ID["primaryKEY"] = str(f.downloadCharacteristics(0x01)).encode('utf-8')
+                                    Enroll_ID["userID"] = Enroll_NAME["std_num"]
+                                    response = requests.post(URL_ENROLL, data=Enroll_ID)
+                                    Enroll_FLAG = json.loads(response.text)
+                                except Exception as e:
+                                    sys.stdout = open('error.txt','w')
+                                    error_date = QDateTime.currentDateTime()
+                                    error_date = error_date.toString('yyyy-MM-dd hh:mm:ss')
+                                    print(error_date," : ",e,"\n")
+                                    self.label_enroll.setText("네트워크 에러 발생!!\n다시 진행해주세요")
+                                    self.mainMessage()
+                                
+                                f.createTemplate()
+                                positionNumber = f.storeTemplate()
+                                Std_DATA[positionNumber] = Enroll_NAME['std_num']
                                 
                                 self.label_enroll.setText(Enroll_FLAG['userName']+"님 지문등록 성공!!")
                 else:
@@ -660,17 +699,20 @@ class Ui_Dialog(object):
                 self.label_enroll.setText("학번을 입력해주세요")
                 self.label_out.setText("사유 선택 후, 지문을 찍어주세요")
 
-                ## 읽은 이미지를 문자열로 전환
-                f.convertImage(0x01)
-
-                finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-                
-                response = requests.post(URL_FINGER)
-                FINGER_DATA = json.loads(response.text)
-
                 ## 지문 넘버에 따른 진행과정
-                if search_finger_data(FINGER_DATA, 'delete'):
-                    response = requests.post(URL_DELETE, data=Delete_ID)
+                if positionNumber != -1:
+                    try:
+                        Delete_ID['primaryKEY'] = Std_DATA[positionNumber]
+                        response = requests.post(URL_DELETE, data=Delete_ID)
+                        f.deleteTemplate(positionNumber)
+                    except Exception as e:
+                        sys.stdout = open('error.txt','w')
+                        error_date = QDateTime.currentDateTime()
+                        error_date = error_date.toString('yyyy-MM-dd hh:mm:ss')
+                        print(error_date," : ",e,"\n")
+                        self.label_delete.setText("네트워크 에러 발생!!\n다시 진행해주세요")
+                        self.mainMessage()
+                        
                     self.label_delete.setText("지문이 삭제되었습니다")
                 else:
                     self.label_delete.setText("지문정보가 잘못되었습니다")
@@ -681,19 +723,19 @@ class Ui_Dialog(object):
                 self.label_enroll.setText("학번을 입력해주세요")
                 self.label_delete.setText("삭제할 지문을 찍어주세요")
 
-                f.convertImage(0x01)
-                finger = str(f.downloadCharacteristics(0x01)).encode('utf-8')
-                
-                response = requests.post(URL_FINGER)
-                FINGER_DATA = json.loads(response.text)
-
-                self.score = search_finger_data(FINGER_DATA)
-                Outgo_ID['primaryKEY'] = int(Main_ID['primaryKEY'])
-                
-                if self.score != 0:
-                    response = requests.post(URL_OUT, data=Outgo_ID)
-                    Outgo_FLAG = json.loads(response.text)
-                    
+                if positionNumber != -1:
+                    try:
+                        Outgo_ID['primaryKEY'] = Std_DATA[positionNumber]
+                        response = requests.post(URL_OUT, data=Outgo_ID)
+                        Outgo_FLAG = json.loads(response.text)
+                    except Exception as e:
+                        sys.stdout = open('error.txt','w')
+                        error_date = QDateTime.currentDateTime()
+                        error_date = error_date.toString('yyyy-MM-dd hh:mm:ss')
+                        print(error_date," : ",e,"\n")
+                        self.label_out.setText("네트워크 에러 발생!!\n다시 진행해주세요")
+                        self.mainMessage()
+                        
                     if Outgo_FLAG['out_time'] == '00:00:00':
                         self.label_out.setText(Outgo_FLAG['std_name'] + "님 외출처리 되었습니다!\n사유 : " + Outgo_FLAG['reason'])
                     else:
@@ -710,5 +752,5 @@ if __name__ == "__main__":
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()
     ui.setupUi(Dialog)
-    Dialog.show()
+    Dialog.showFullScreen()
     sys.exit(app.exec_())
