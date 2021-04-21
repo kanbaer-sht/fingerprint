@@ -585,8 +585,11 @@ class Ui_Dialog(object):
         except Exception as e:
             self.label_enroll.setText("네트워크 에러 발생!!\n다시 진행해주세요")
             self.mainMessage()
-
-        if(Enroll_FLAG["flag_exist"] == "true"):
+            
+        if(Enroll_FLAG["flag_serial"] == "false"):
+            self.label_enroll.setText(Enroll_FLAG["userName"] + "님 지문 데이터가 존재합니다")
+            reset_all_dic()
+        elif(Enroll_FLAG["flag_exist"] == "true"):
             self.enroll_flag = True
             self.label_enroll.setText(Enroll_FLAG["userName"] + "님 지문 등록을 진행합니다\n센서에 손가락을 올려주세요")
         else:
