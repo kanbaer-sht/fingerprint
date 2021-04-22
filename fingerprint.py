@@ -721,13 +721,14 @@ class Ui_Dialog(object):
                     self.label_delete.setText("지문정보가 잘못되었습니다")
             ## 외출
             elif self.tabWidget.currentIndex() == 3:
-                self.select_reason()
+                
                 self.label_text.setText("지문을 찍어주세요")
                 self.label_enroll.setText("학번을 입력해주세요")
                 self.label_delete.setText("삭제할 지문을 찍어주세요")
 
                 if positionNumber != -1:
                     try:
+                        self.select_reason()
                         Outgo_ID['primaryKEY'] = Std_DATA[positionNumber]
                         response = requests.post(URL_OUT, data=Outgo_ID)
                         Outgo_FLAG = json.loads(response.text)
