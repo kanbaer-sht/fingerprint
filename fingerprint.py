@@ -130,8 +130,7 @@ def reset_all_dic():
     }
 
     Outgo_ID = {
-        "primaryKEY" : 'NULL',
-        "reason" : '식사'
+        "primaryKEY" : 'NULL'
     }
 
     Outgo_FLAG = {
@@ -530,13 +529,13 @@ class Ui_Dialog(object):
         #print(Outgo_ID)
         
     def select_reason(self):
-        if self.button_meal.isChecked == True:
+        if self.button_meal.isChecked():
             Outgo_ID["reason"] = "식사"
-        elif self.button_mensetsu.isChecked == True:
+        elif self.button_mensetsu.isChecked():
             Outgo_ID["reason"] = "면접연습"
-        elif self.button_gz.isChecked == True:
+        elif self.button_gz.isChecked():
             Outgo_ID["reason"] = "글로벌존"
-        elif self.button_etc.isChecked == True:
+        elif self.button_etc.isChecked():
             Outgo_ID["reason"] = "기타"
     
     # 입력한 넘버패드 버튼에 따라 서버에 전송할 학번 값 수정
