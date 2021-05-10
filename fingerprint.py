@@ -83,9 +83,9 @@ except Exception as e:
 def get_Finger_List():
     response = requests.post(URL_FINGER)
     finger_list = json.loads(response.text)
-
+    f.clearDatabase()
     for i in range(0, len(finger_list)):
-        f.deleteTemplate(i)
+        #f.deleteTemplate(i)
         f.uploadCharacteristics(0x01, eval(finger_list[i]['serial_num']))
         f.createTemplate()
         positionNumber = f.storeTemplate()
@@ -623,7 +623,7 @@ class Ui_Dialog(object):
                     self.label_text.setText("등록되지 않은 지문입니다")
                     time.sleep(1)
                 else:
-                    if score >= 35:
+                    if score >= 55:
                         try:
                             Main_ID['primaryKEY'] = Std_DATA[positionNumber]
                             response = requests.post(URL_MAIN, data=Main_ID)
@@ -638,7 +638,10 @@ class Ui_Dialog(object):
                         
                         ## True => 정상처리, False => 정상처리x
                         if Main_CHECK['data']:
-                            self.label_text.setText(Main_CHECK['userName']+"님 "+Main_CHECK['status']+"처리 되었습니다")
+                            if Main_ID['tab'] == 'true':
+                                self.label_text.setText(Main_CHECK['userName']+"님 입실처리 되었습니다")
+                            else:
+                                self.label_text.setText(Main_CHECK['userName']+"님 퇴실처리 되었습니다")
                         else:
                             self.label_text.setText("입/퇴실 버튼을 확인하세요")
                     else:
